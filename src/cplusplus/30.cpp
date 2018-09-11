@@ -10,63 +10,53 @@ public:
         // double check the pre-conditions as in the Example 2, actually,
         // it does not meet the pre-condition.
         int g_len_word = words[0].size();
+        
         for (const auto& word : words)
         {
             if (word.size() != g_len_word)
                 return {};
         }
             
-        // construct the map like
+        // construct the map like <key, number_of_match_in_words>
         /*   ["abc", 1]
         *    ["bcd", 2]
-        *    ["def", 3]
+        *    ["def", 1]
         */
-        int cnt_v = 0;
-        int g_accu = 0;
         std::unordered_map<string, int> g_map;
+        // construct the map
         for (const auto& word : words)
-        {
-            bool is_inside = false;
-            std::unordered_map<string, int>::iterator iter; 
-            std::tie(iter, is_inside) = g_map.emplace(word, cnt_v);
-            g_accu += iter->second;
-            if (is_inside)
-                ++cnt_v;
-        }
-        
-        
-        // construct the g_array
-        std::vector<int> g_array(s.size());
-        
-        for (auto iter = s.cbegin(); (iter + g_len_word - 1) < s.cend(); ++iter)
-        {
-            std::string lookfor(iter, iter + g_len_word);
-            //std::cout << "lookfor " << lookfor << '\n';
-            auto iter_found = g_map.find(lookfor);
-            if (iter_found != g_map.end())
-                g_array[iter - s.cbegin()] = g_map.at(lookfor);
-        }
+            ++g_map[word];
         
         vector<int> g_vec_idx;
-        for (auto iter = g_array.cbegin(); (iter + g_len_word - 1) < g_array.cend(); ++iter)
+        
+        for (auto iter_per_c = s.begin(); iter_per_c < s.end() - g_len_word * g_len_words + 1; ++iter_per_c)
         {
-            //int sum = std::accumulate(iter, iter + g_len_word - 1, 0);
-            int sum = 0;
-            for (int i = 0; i < g_len_words; ++i)
+            std::unordered_map<string, int> g_map_mark;
+            
+            int k = 0;
+            for (; k < g_len_words; ++k)
             {
-                if ((iter + i * g_len_word) < g_array.cend())
+                auto iter_start = iter_per_c + k * g_len_word;
+                
+                string str(iter_start, iter_start + g_len_word);
+    
+                auto iter_find = g_map.find(str);
+                if (iter_find != g_map.end())
                 {
-                    //std::cout << "sum += " << *(iter + i * g_len_word) << '\n';
-                    sum += *(iter + i * g_len_word);
+                    ++g_map_mark[str];
+                    
+                    if (g_map_mark[str] > g_map[str])
+                        break;
                 }
                 else
+                {
                     break;
+                }
             }
             
-            if (sum == g_accu)
-                g_vec_idx.push_back(iter - g_array.cbegin());
+            if (k == g_len_words)
+                g_vec_idx.push_back(iter_per_c - s.begin());
         }
-        
         
         return g_vec_idx;
             
